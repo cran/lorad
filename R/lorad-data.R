@@ -1,0 +1,56 @@
+#' Sequence data used in k80 vignette
+#'
+#' @format ## `k80samples`
+#' A data frame with 10,000 rows and 4 columns:
+#' \describe{
+#'   \item{iter}{Iteration}
+#'   \item{log.kernel}{Log unnormalized posterior}
+#'   \item{edgelen}{Edge length in substitutions per site}
+#'   \item{kappa}{Transition transversion rate ratio}
+#' }
+#' @source \doi{10.1093/sysbio/syad007}
+"k80samples"
+
+#' Sequence data used in gtrig vignette
+#'
+#' @format ## `gtrigsamples`
+#' A data frame with 10,001 rows and 35 columns:
+#' \describe{
+#' 		\item{Iteration}{MCMC iteration}  
+#' 		\item{Posterior}{Log of the unnormalized posterior density}  
+#' 		\item{Likelihood}{Log likelihood}  
+#' 		\item{Prior}{Log of the prior density}  
+#' 		\item{alpha}{Shape parameter of the (mean=1) Gamma distribution of among-site rate heterogeneity}  
+#' 		\item{edge_length_proportions.1.}{Proportion of total tree length used by edge 1}  
+#' 		\item{edge_length_proportions.2.}{Proportion of total tree length used by edge 2}  
+#' 		\item{edge_length_proportions.3.}{Proportion of total tree length used by edge 3}  
+#' 		\item{edge_length_proportions.4.}{Proportion of total tree length used by edge 4}  
+#' 		\item{edge_length_proportions.5.}{Proportion of total tree length used by edge 5}  
+#' 		\item{edge_length_proportions.6.}{Proportion of total tree length used by edge 6}  
+#' 		\item{edge_length_proportions.7.}{Proportion of total tree length used by edge 7}  
+#' 		\item{edgelens.1.}{Edge length 1}  
+#' 		\item{edgelens.2.}{Edge length 2}  
+#' 		\item{edgelens.3.}{Edge length 3}  
+#' 		\item{edgelens.4.}{Edge length 4}  
+#' 		\item{edgelens.5.}{Edge length 5}  
+#' 		\item{edgelens.6.}{Edge length 6}  
+#' 		\item{edgelens.7.}{Edge length 7}  
+#' 		\item{er.1.}{Exchangeability parameter for A to C}  
+#' 		\item{er.2.}{Exchangeability parameter for A to G}  
+#' 		\item{er.3.}{Exchangeability parameter for A to T}  
+#' 		\item{er.4.}{Exchangeability parameter for C to G}  
+#' 		\item{er.5.}{Exchangeability parameter for C to T}  
+#' 		\item{er.6.}{Exchangeability parameter for G to T}  
+#' 		\item{pi.1.}{Nucleotide relative frequency for A}  
+#' 		\item{pi.2.}{Nucleotide relative frequency for C}  
+#' 		\item{pi.3.}{Nucleotide relative frequency for G}
+#' 		\item{pi.4.}{Nucleotide relative frequency for t}
+#' 		\item{pinvar}{Proportion of invariable sites}
+#' 		\item{site_rates.1.}{Rate for site category 1}
+#' 		\item{site_rates.2.}{Rate for site category 1}
+#' 		\item{site_rates.3.}{Rate for site category 1}
+#' 		\item{site_rates.4.}{Rate for site category 1}
+#' 		\item{tree_length}{Tree length (sum of all edge lengths) in substitutions per site}
+#' }
+#' @source The program RevBayes (version 1.2.1) was used to obtain a sample from the Bayesian posterior distribution for 5 green plant rbcL sequences under a GTR+I+G model.
+"gtrigsamples"

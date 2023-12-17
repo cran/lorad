@@ -1,0 +1,15 @@
+## R package reference generated from DESCRIPTION metadata
+citation(auto = meta)
+
+## paper describing the method
+bibentry(
+  bibtype  = "Article",
+  title    = "LoRaD: marginal likelihood estimation with haste (but no waste)",
+  author   = c(person("Yu-Bo", "Wang"), person("Analisa", "Milkey"), person("Aolan", "Li"), person("Ming-Hui", "Chen"), person("Lynn", "Kuo"), person(c("Paul", "O."), "Lewis")),
+  journal  = "Systematic Biology",
+  year     = "2023",
+  volume   = "72",
+  number   = "3",
+  pages    = "639-648",
+  doi      = "10.1093/sysbio/syad007"
+)

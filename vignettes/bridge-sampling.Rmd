@@ -1,0 +1,201 @@
+---
+title: "bridge-sampling-vignette"
+output: rmarkdown::html_vignette
+bibliography: bridge-sampling.bib 
+vignette: >
+  %\VignetteIndexEntry{bridge-sampling-vignette}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+# Introduction
+
+This vignette is an elaboration of the _Hierarchical Normal Example Stan_ vignette in the bridgesampling R package [@gronau2020]. It shows that the LoRaD method [@wang2023] produces an estimate of the marginal likelihood nearly identical to that produced by Bridge Sampling [@mengwong1996] using the bridgesampling package. The steps in this vignette are:
+
+1. Simulate data
+2. Use rstan [@rstan2023] to obtain a posterior sample via MCMC
+3. Use bridgesampling to estimate the marginal likelihood
+4. Use LoRaD to estimate the marginal likelihood
+
+The first three steps are identical to what is shown in the bridgesampling vignette.
+
+# Load packages
+
+We will use three packages for this vignette: rstan, bridgesampling, and lorad.
+
+```{r cache=FALSE}
+library(rstan)
+library(bridgesampling)
+library(lorad)
+```
+
+# Simulating data
+
+The data for this example comprise $n=20$ values $\{y_i : i=1,2,\cdots, n\}$, where $$y_i \sim N(\theta_i, \sigma^2) \\ \theta_i \sim N(\mu, \tau^2)\\ \mu = 0\\ \tau^2 = \tfrac{1}{2}$$ 
+
+```{r cache=FALSE}
+set.seed(12345)
+
+mu <- 0
+tau2 <- 0.5
+sigma2 <- 1
+
+n <- 20
+theta <- rnorm(n, mu, sqrt(tau2))
+y <- rnorm(n, theta, sqrt(sigma2))
+```
+
+For Bayesian analyses, the priors used for the group-level mean and variance are: $$\mu \sim N(\mu_0, \tau_0^2)\\ \tau^2 \sim \mbox{InvGamma}(\alpha, \beta)\\ \mu_0 = 0\\ \tau_0^2 = 1\\ \alpha = \beta = 1$$ 
+
+```{r cache=FALSE}
+mu0 <- 0
+tau20 <- 1
+alpha <- 1
+beta <- 1
+```
+
+# Specify the models for STAN
+
+We will compare the following two models using marginal likelihood:
+
+1. ${\cal H}_0: \mu = 0$
+2. ${\cal H}_1:\mu$ estimated
+
+These models differ only in whether the group-level mean is fixed to 0 or is estimated. As mentioned in the original bridgesampling vignette, it is important when using STAN to use the `target += ...` method for specifying log probability densities so that normalizing constants are included.
+
+```{r cache=FALSE}
+stancodeH0 <- 'data {
+  int<lower=1> n; // number of observations
+  vector[n] y; // observations
+  real<lower=0> alpha;
+  real<lower=0> beta;
+  real<lower=0> sigma2;
+}
+parameters {
+  real<lower=0> tau2; // group-level variance
+  vector[n] theta; // participant effects
+}
+model {
+  target += inv_gamma_lpdf(tau2 | alpha, beta);
+  target += normal_lpdf(theta | 0, sqrt(tau2));
+  target += normal_lpdf(y | theta, sqrt(sigma2));
+}
+'
+stancodeH1 <- 'data {
+  int<lower=1> n; // number of observations
+  vector[n] y; // observations
+  real mu0;
+  real<lower=0> tau20;
+  real<lower=0> alpha;
+  real<lower=0> beta;
+  real<lower=0> sigma2;
+}
+parameters {
+  real mu;
+  real<lower=0> tau2; // group-level variance
+  vector[n] theta; // participant effects
+}
+model {
+  target += normal_lpdf(mu | mu0, sqrt(tau20));
+  target += inv_gamma_lpdf(tau2 | alpha, beta);
+  target += normal_lpdf(theta | mu, sqrt(tau2));
+  target += normal_lpdf(y | theta, sqrt(sigma2));
+}
+'
+# compile models
+stanmodelH0 <- stan_model(model_code = stancodeH0, model_name="stanmodel")
+stanmodelH1 <- stan_model(model_code = stancodeH1, model_name="stanmodel")
+```
+
+# Fitting the models using rstan
+
+Now use STAN to sample from the posterior distribution of both models.
+
+```{r cache=FALSE}
+# fit models
+stanfitH0 <- sampling(stanmodelH0, data = list(y = y, n = n,
+                                               alpha = alpha,
+                                               beta = beta,
+                                               sigma2 = sigma2),
+                      iter = 50000, warmup = 1000, chains = 3, cores = 1, seed = 12345)
+stanfitH1 <- sampling(stanmodelH1, data = list(y = y, n = n,
+                                               mu0 = mu0,
+                                               tau20 = tau20,
+                                               alpha = alpha,
+                                               beta = beta,
+                                               sigma2 = sigma2),
+                      iter = 50000, warmup = 1000, chains = 3, cores = 1, seed = 12345)
+```
+
+# Estimate log marginal likelihoods using bridgesampling
+
+Now load the bridgesampling package and estimate the log marginal likelihood for each model. The null model $\cal{H}_0$ is slightly preferred, which makes sense because the data were simulated assuming $\mu=0$. 
+
+```{r cache=FALSE}
+# compute log marginal likelihood via bridge sampling for H0
+H0.bridge <- bridge_sampler(stanfitH0, silent = TRUE)
+
+# compute log marginal likelihood via bridge sampling for H1
+H1.bridge <- bridge_sampler(stanfitH1, silent = TRUE)
+
+print(H0.bridge)
+print(H1.bridge)
+```
+
+The log marginal likelihood estimates are -37.53668 for ${\cal H}_0$ and 
+-37.7984 for ${\cal H}_1$.
+
+# Estimate log marginal likelihoods using LoRaD
+
+## Export the sampled parameters
+
+In order to use the LoRaD method, we need to export the sampled parameter values along with the unnormalized log posterior to a data frame. The `permuted=TRUE` setting causes samples from all 3 chains to be merged.
+
+```{r cache=FALSE}
+paramsH0 <- data.frame(extract(stanfitH0, permuted=TRUE))
+
+paramsH1 <- data.frame(extract(stanfitH1, permuted=TRUE))
+```
+
+## The null hypothesis
+
+After loading the lorad package, specify what each column in the exported parameter file represents. STAN transforms all parameters so that they are unconstrained (e.g. it log-transforms parameters with support restricted to the positive real numbers so that the transformed parameter has support equal to the entire real line). This means that the lorad package need not perform any transformations. Create a named list that specifies _unconstrained_ for all columns and _posterior_ for the column labeled `lp`. The lorad package assumes that all columns labeled _posterior_ should be summed to form the log posterior kernel (the posterior kernel is simply the unnormalized posterior: the product of prior and likelihood). 
+
+The command `lorad_estimate` estimates the log marginal likelihood. This function is provided
+
+* a data frame (`paramsH0`) containing the sampled parameter vectors
+* a named list (`colspecH0`) containing the column specifications
+* the fraction (0.5) of the sample to be used for training
+* a string specifying whether the _training_ sample should be the first part (`left`), the last part (`right`), or a random sample (`random`) of the parameter vectors in `paramsH0`
+* the fraction (0.1) of the _estimation_ sample (i.e. the remaining parameter vectors after removing the training fraction) to be used by LoRaD.
+
+The LoRaD method uses the training sample to determine the mean and covariance matrix used to standardize the parameter vectors and the radius to be used in defining the working parameter space. It then uses only a small _coverage_ fraction of the highest density points in the remaining estimation sample to estimate the marginal likelihood. The values 0.5 and 0.1 are generally good values to use for the training fraction and coverage. Using too large a fraction for coverage risks a poor fit of the multivariate normal reference distribution to the sampled values inside the working parameter space.
+
+```{r cache=FALSE}
+colspecH0 <- c("tau2"="unconstrained", "theta.1"="unconstrained", "theta.2"="unconstrained", "theta.3"="unconstrained", "theta.4"="unconstrained", "theta.5"="unconstrained", "theta.6"="unconstrained", "theta.7"="unconstrained", "theta.8"="unconstrained", "theta.9"="unconstrained", "theta.10"="unconstrained", "theta.11"="unconstrained", "theta.12"="unconstrained", "theta.13"="unconstrained", "theta.14"="unconstrained", "theta.15"="unconstrained", "theta.16"="unconstrained", "theta.17"="unconstrained", "theta.18"="unconstrained", "theta.19"="unconstrained", "theta.20"="unconstrained", "lp__"="posterior")
+results0 <- lorad_estimate(paramsH0, colspecH0, 0.5, "random", 0.1)
+lorad_summary(results0)
+```
+
+The log marginal likelihood for the null hypothesis, estimated by LoRaD, is -37.385193, which is quite close to the value -37.53668 estimated by the bridgesampling package.
+
+## The alternative hypothesis
+
+Repeat the LoRaD analysis for the alternative hypothesis.
+
+```{r cache=FALSE}
+colspecH1 <- c("mu"="unconstrained", "tau2"="unconstrained", "theta.1"="unconstrained", "theta.2"="unconstrained", "theta.3"="unconstrained", "theta.4"="unconstrained", "theta.5"="unconstrained", "theta.6"="unconstrained", "theta.7"="unconstrained", "theta.8"="unconstrained", "theta.9"="unconstrained", "theta.10"="unconstrained", "theta.11"="unconstrained", "theta.12"="unconstrained", "theta.13"="unconstrained", "theta.14"="unconstrained", "theta.15"="unconstrained", "theta.16"="unconstrained", "theta.17"="unconstrained", "theta.18"="unconstrained", "theta.19"="unconstrained", "theta.20"="unconstrained", "lp__"="posterior")
+results1 <- lorad_estimate(paramsH1, colspecH1, 0.5, "random", 0.1)
+lorad_summary(results1)
+```
+
+The log marginal likelihood for the altenative hypothesis was -37.693758 for lorad (compared to -37.7984 for bridgesampling).
+
+# Literature Cited

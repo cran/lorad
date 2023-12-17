@@ -1,0 +1,120 @@
+---
+title: "lorad-k80-vignette"
+output: rmarkdown::html_vignette
+bibliography: k80.bib 
+vignette: >
+  %\VignetteIndexEntry{lorad-k80-vignette}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+In this vignette, we explain how one can estimate the marginal likelihood using the LoRaD method [@wang2023].
+
+# Data
+
+Two DNA sequences, each of length 200 sites, were simulated under the K80 substitution model [@Kimura:1980vd]. This model has two parameters:
+
+* **transition/transversion rate ratio**, $\kappa$: the ratio of the instantaneous rate of transition-type substitutions (A $\leftrightarrow$G, C$\leftrightarrow$T) to the instantaneous rate of transversion-type substitutions (A$\leftrightarrow$C, A$\leftrightarrow$T, G$\leftrightarrow$C, G$\leftrightarrow$T). 
+
+* **edge length**, $v$ : the evolutionary distance between the two sequences measured in expected number of substitutions per site.
+
+# Model
+
+A continuous-time, 4-state Markov model was used for both simulation and analysis. The instantaneous rate matrix ${\bf Q}$ that defines the K80 substitution model is
+```{=latex}
+\begin{align}
+{\bf Q} &= \left[ \begin{array}{cccc} 
+-\beta(\kappa + 2) & \beta              & \kappa \beta       & \beta              \\
+\beta              & -\beta(\kappa + 2) & \beta              & \kappa \beta       \\
+\kappa \beta       & \beta              & -\beta(\kappa + 2) & \beta              \\
+\beta              & \kappa \beta       & \beta              & -\beta(\kappa + 2) \\
+\end{array} \right],
+\end{align}
+```
+where the order of (e.g. DNA) states for both rows and columns is A, C, G, T. The matrix of transition probabilities can be obtained by exponentiating the product of ${\bf Q}$ and time $t$:
+```{=latex}
+\begin{align}
+{\bf P} &= e^{{\bf Q}t}.
+\end{align}
+```
+The product of the base rate $\beta$ and time $t$ can be determined from the edge length parameter $v$ and transition/transversion rate ratio parameter $\kappa$. The edge length is the product of the overall substitution rate ($0.25 (8 \beta + 4 \kappa \beta)$) and time ($t$), yielding
+```{=latex}
+\begin{align}
+v &= 2 \beta t + \kappa \beta t \\
+\beta t &= \frac{v}{2 + \kappa}
+\end{align}
+```
+
+The transition probabilities may be used to simulate data for one of the two sequences given the other sequence. The state for each site in the starting sequence is drawn from the stationary distribution $\pi_A=\pi_C=\pi_G=\pi_T=0.25$ implied by ${\bf Q}$. 
+
+Given simulated sequence data ${\bf D}$, the joint posterior distribution $p(v, \kappa|{\bf D})$ was sampled using MCMC, with likelihoods computed using the K80 model and using Exponential priors with mean equal to 50 for both $v$ and $\kappa$. The posterior sample (10,000 points sampled 100 iterations apart) after a burn-in of 1000 iterations was saved tab-delimited text file _k80-samples.txt_. In the file there are four columns, iter (MCMC-iteration), log-kernel (log posterior kernel), edgelen (sampled edge length), and kappa (sampled kappa parameter). 
+
+In this example we will compute an estimate of the marginal likelihood under this model using the LoRaD method.
+
+# Reading in Data
+
+First, load the lorad package.
+
+```{r}
+library(lorad)
+```
+
+Read in the file containing the posterior sample.
+
+```{r}
+# Dimensions of k80samples
+dim(k80samples)
+
+# Column names of k80samples
+colnames(k80samples)
+```
+
+# Column Specification 
+
+Next, we must create a named vector to associate each column name in `k80samples` with a column specification. Here are the possible column specifications:
+
+* **iteration**: The MCMC iteration
+* **posterior**: The values in this column are components of the posterior (log scale)
+* **nonnegative**: The parameter has non-negative support $[0,\infty)$
+* **unconstrained**: The parameter has support $(-\infty,\infty)$
+* **ignore**: The column should be ignored
+
+All columns labeled **posterior** will be summed to create the log posterior kernel (sum of log likelihood and log joint prior). 
+
+Here are the column specifications appropriate for this example.
+
+| Column     | Specification |
+| :--------: | :-----------: |
+| iter       |  iteration    |
+| log.kernel |  posterior    |
+| edgelen    | positive   |
+| kappa      | positive   |
+
+```{r}
+# Create a named vector holding the column specifications
+colspec <- c("iter"="iteration", "log.kernel"="posterior", "edgelen"="positive", "kappa"="positive")
+```
+
+The LoRaD requires all parameters to be unconstrained in their support. Thus, the `positive` column specification for both `edgelen` and `kappa` results in a log transformation prior to application of the LoRaD method.
+
+# Computing an Estimate of the Marginal Likelihood
+
+To run the LoRaD function we need to specify the **training fraction**, the **training sample selection method**, and the **coverage fraction**. The training fraction and the coverage fraction must be between 0 and 1. The training sample selection method can be _left_ (the first part of the sample), _right_ (the second part of the sample), or _random_ (a random part of the sample).
+
+For this example we used 0.5 for the training fraction, 0.1 for the coverage fraction, and "left" for the training sample selection method. 
+
+```{r}
+results <- lorad_estimate(k80samples, colspec, 0.5, "left", 0.1)
+lorad_summary(results)
+```
+
+For comparison, the two log marginal likelihood estimates reported by @wang2023 were -460.82239 (LoRaD method) and -460.86154 (Steppingstone method).
+
+## Literature Cited

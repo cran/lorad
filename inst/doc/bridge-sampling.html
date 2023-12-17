@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>bridge-sampling-vignette</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+<style type="text/css">
+
+div.csl-bib-body { }
+div.csl-entry {
+clear: both;
+margin-bottom: 0em;
+}
+.hanging div.csl-entry {
+margin-left:2em;
+text-indent:-2em;
+}
+div.csl-left-margin {
+min-width:2em;
+float:left;
+}
+div.csl-right-inline {
+margin-left:2em;
+padding-left:1em;
+}
+div.csl-indent {
+margin-left: 2em;
+}
+</style>
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">bridge-sampling-vignette</h1>
+
+
+
+<div id="introduction" class="section level1">
+<h1>Introduction</h1>
+<p>This vignette is an elaboration of the <em>Hierarchical Normal
+Example Stan</em> vignette in the bridgesampling R package <span class="citation">(Gronau, Singmann, and Wagenmakers 2020)</span>. It
+shows that the LoRaD method <span class="citation">(Wang et al.
+2023)</span> produces an estimate of the marginal likelihood nearly
+identical to that produced by Bridge Sampling <span class="citation">(Meng and Wong 1996)</span> using the bridgesampling
+package. The steps in this vignette are:</p>
+<ol style="list-style-type: decimal">
+<li>Simulate data</li>
+<li>Use rstan <span class="citation">(Stan Development Team 2023)</span>
+to obtain a posterior sample via MCMC</li>
+<li>Use bridgesampling to estimate the marginal likelihood</li>
+<li>Use LoRaD to estimate the marginal likelihood</li>
+</ol>
+<p>The first three steps are identical to what is shown in the
+bridgesampling vignette.</p>
+</div>
+<div id="load-packages" class="section level1">
+<h1>Load packages</h1>
+<p>We will use three packages for this vignette: rstan, bridgesampling,
+and lorad.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(rstan)</span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="co">#&gt; Loading required package: StanHeaders</span></span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a><span class="co">#&gt; rstan version 2.32.3 (Stan version 2.26.1)</span></span>
+<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a><span class="co">#&gt; For execution on a local, multicore CPU with excess RAM we recommend calling</span></span>
+<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a><span class="co">#&gt; options(mc.cores = parallel::detectCores()).</span></span>
+<span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a><span class="co">#&gt; To avoid recompilation of unchanged Stan programs, we recommend calling</span></span>
+<span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a><span class="co">#&gt; rstan_options(auto_write = TRUE)</span></span>
+<span id="cb1-9"><a href="#cb1-9" tabindex="-1"></a><span class="co">#&gt; For within-chain threading using `reduce_sum()` or `map_rect()` Stan functions,</span></span>
+<span id="cb1-10"><a href="#cb1-10" tabindex="-1"></a><span class="co">#&gt; change `threads_per_chain` option:</span></span>
+<span id="cb1-11"><a href="#cb1-11" tabindex="-1"></a><span class="co">#&gt; rstan_options(threads_per_chain = 1)</span></span>
+<span id="cb1-12"><a href="#cb1-12" tabindex="-1"></a><span class="fu">library</span>(bridgesampling)</span>
+<span id="cb1-13"><a href="#cb1-13" tabindex="-1"></a><span class="fu">library</span>(lorad)</span></code></pre></div>
+</div>
+<div id="simulating-data" class="section level1">
+<h1>Simulating data</h1>
+<p>The data for this example comprise <span class="math inline">\(n=20\)</span> values <span class="math inline">\(\{y_i : i=1,2,\cdots, n\}\)</span>, where <span class="math display">\[y_i \sim N(\theta_i, \sigma^2) \\ \theta_i \sim
+N(\mu, \tau^2)\\ \mu = 0\\ \tau^2 = \tfrac{1}{2}\]</span></p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">12345</span>)</span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>mu <span class="ot">&lt;-</span> <span class="dv">0</span></span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a>tau2 <span class="ot">&lt;-</span> <span class="fl">0.5</span></span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a>sigma2 <span class="ot">&lt;-</span> <span class="dv">1</span></span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a>n <span class="ot">&lt;-</span> <span class="dv">20</span></span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a>theta <span class="ot">&lt;-</span> <span class="fu">rnorm</span>(n, mu, <span class="fu">sqrt</span>(tau2))</span>
+<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a>y <span class="ot">&lt;-</span> <span class="fu">rnorm</span>(n, theta, <span class="fu">sqrt</span>(sigma2))</span></code></pre></div>
+<p>For Bayesian analyses, the priors used for the group-level mean and
+variance are: <span class="math display">\[\mu \sim N(\mu_0, \tau_0^2)\\
+\tau^2 \sim \mbox{InvGamma}(\alpha, \beta)\\ \mu_0 = 0\\ \tau_0^2 = 1\\
+\alpha = \beta = 1\]</span></p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a>mu0 <span class="ot">&lt;-</span> <span class="dv">0</span></span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>tau20 <span class="ot">&lt;-</span> <span class="dv">1</span></span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>alpha <span class="ot">&lt;-</span> <span class="dv">1</span></span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a>beta <span class="ot">&lt;-</span> <span class="dv">1</span></span></code></pre></div>
+</div>
+<div id="specify-the-models-for-stan" class="section level1">
+<h1>Specify the models for STAN</h1>
+<p>We will compare the following two models using marginal
+likelihood:</p>
+<ol style="list-style-type: decimal">
+<li><span class="math inline">\({\cal H}_0: \mu = 0\)</span></li>
+<li><span class="math inline">\({\cal H}_1:\mu\)</span> estimated</li>
+</ol>
+<p>These models differ only in whether the group-level mean is fixed to
+0 or is estimated. As mentioned in the original bridgesampling vignette,
+it is important when using STAN to use the <code>target += ...</code>
+method for specifying log probability densities so that normalizing
+constants are included.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a>stancodeH0 <span class="ot">&lt;-</span> <span class="st">&#39;data {</span></span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a><span class="st">  int&lt;lower=1&gt; n; // number of observations</span></span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a><span class="st">  vector[n] y; // observations</span></span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a><span class="st">  real&lt;lower=0&gt; alpha;</span></span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a><span class="st">  real&lt;lower=0&gt; beta;</span></span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a><span class="st">  real&lt;lower=0&gt; sigma2;</span></span>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a><span class="st">}</span></span>
+<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a><span class="st">parameters {</span></span>
+<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a><span class="st">  real&lt;lower=0&gt; tau2; // group-level variance</span></span>
+<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a><span class="st">  vector[n] theta; // participant effects</span></span>
+<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a><span class="st">}</span></span>
+<span id="cb4-12"><a href="#cb4-12" tabindex="-1"></a><span class="st">model {</span></span>
+<span id="cb4-13"><a href="#cb4-13" tabindex="-1"></a><span class="st">  target += inv_gamma_lpdf(tau2 | alpha, beta);</span></span>
+<span id="cb4-14"><a href="#cb4-14" tabindex="-1"></a><span class="st">  target += normal_lpdf(theta | 0, sqrt(tau2));</span></span>
+<span id="cb4-15"><a href="#cb4-15" tabindex="-1"></a><span class="st">  target += normal_lpdf(y | theta, sqrt(sigma2));</span></span>
+<span id="cb4-16"><a href="#cb4-16" tabindex="-1"></a><span class="st">}</span></span>
+<span id="cb4-17"><a href="#cb4-17" tabindex="-1"></a><span class="st">&#39;</span></span>
+<span id="cb4-18"><a href="#cb4-18" tabindex="-1"></a>stancodeH1 <span class="ot">&lt;-</span> <span class="st">&#39;data {</span></span>
+<span id="cb4-19"><a href="#cb4-19" tabindex="-1"></a><span class="st">  int&lt;lower=1&gt; n; // number of observations</span></span>
+<span id="cb4-20"><a href="#cb4-20" tabindex="-1"></a><span class="st">  vector[n] y; // observations</span></span>
+<span id="cb4-21"><a href="#cb4-21" tabindex="-1"></a><span class="st">  real mu0;</span></span>
+<span id="cb4-22"><a href="#cb4-22" tabindex="-1"></a><span class="st">  real&lt;lower=0&gt; tau20;</span></span>
+<span id="cb4-23"><a href="#cb4-23" tabindex="-1"></a><span class="st">  real&lt;lower=0&gt; alpha;</span></span>
+<span id="cb4-24"><a href="#cb4-24" tabindex="-1"></a><span class="st">  real&lt;lower=0&gt; beta;</span></span>
+<span id="cb4-25"><a href="#cb4-25" tabindex="-1"></a><span class="st">  real&lt;lower=0&gt; sigma2;</span></span>
+<span id="cb4-26"><a href="#cb4-26" tabindex="-1"></a><span class="st">}</span></span>
+<span id="cb4-27"><a href="#cb4-27" tabindex="-1"></a><span class="st">parameters {</span></span>
+<span id="cb4-28"><a href="#cb4-28" tabindex="-1"></a><span class="st">  real mu;</span></span>
+<span id="cb4-29"><a href="#cb4-29" tabindex="-1"></a><span class="st">  real&lt;lower=0&gt; tau2; // group-level variance</span></span>
+<span id="cb4-30"><a href="#cb4-30" tabindex="-1"></a><span class="st">  vector[n] theta; // participant effects</span></span>
+<span id="cb4-31"><a href="#cb4-31" tabindex="-1"></a><span class="st">}</span></span>
+<span id="cb4-32"><a href="#cb4-32" tabindex="-1"></a><span class="st">model {</span></span>
+<span id="cb4-33"><a href="#cb4-33" tabindex="-1"></a><span class="st">  target += normal_lpdf(mu | mu0, sqrt(tau20));</span></span>
+<span id="cb4-34"><a href="#cb4-34" tabindex="-1"></a><span class="st">  target += inv_gamma_lpdf(tau2 | alpha, beta);</span></span>
+<span id="cb4-35"><a href="#cb4-35" tabindex="-1"></a><span class="st">  target += normal_lpdf(theta | mu, sqrt(tau2));</span></span>
+<span id="cb4-36"><a href="#cb4-36" tabindex="-1"></a><span class="st">  target += normal_lpdf(y | theta, sqrt(sigma2));</span></span>
+<span id="cb4-37"><a href="#cb4-37" tabindex="-1"></a><span class="st">}</span></span>
+<span id="cb4-38"><a href="#cb4-38" tabindex="-1"></a><span class="st">&#39;</span></span>
+<span id="cb4-39"><a href="#cb4-39" tabindex="-1"></a><span class="co"># compile models</span></span>
+<span id="cb4-40"><a href="#cb4-40" tabindex="-1"></a>stanmodelH0 <span class="ot">&lt;-</span> <span class="fu">stan_model</span>(<span class="at">model_code =</span> stancodeH0, <span class="at">model_name=</span><span class="st">&quot;stanmodel&quot;</span>)</span>
+<span id="cb4-41"><a href="#cb4-41" tabindex="-1"></a>stanmodelH1 <span class="ot">&lt;-</span> <span class="fu">stan_model</span>(<span class="at">model_code =</span> stancodeH1, <span class="at">model_name=</span><span class="st">&quot;stanmodel&quot;</span>)</span></code></pre></div>
+</div>
+<div id="fitting-the-models-using-rstan" class="section level1">
+<h1>Fitting the models using rstan</h1>
+<p>Now use STAN to sample from the posterior distribution of both
+models.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="co"># fit models</span></span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>stanfitH0 <span class="ot">&lt;-</span> <span class="fu">sampling</span>(stanmodelH0, <span class="at">data =</span> <span class="fu">list</span>(<span class="at">y =</span> y, <span class="at">n =</span> n,</span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a>                                               <span class="at">alpha =</span> alpha,</span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a>                                               <span class="at">beta =</span> beta,</span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a>                                               <span class="at">sigma2 =</span> sigma2),</span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a>                      <span class="at">iter =</span> <span class="dv">50000</span>, <span class="at">warmup =</span> <span class="dv">1000</span>, <span class="at">chains =</span> <span class="dv">3</span>, <span class="at">cores =</span> <span class="dv">1</span>, <span class="at">seed =</span> <span class="dv">12345</span>)</span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a><span class="co">#&gt; SAMPLING FOR MODEL &#39;stanmodel&#39; NOW (CHAIN 1).</span></span>
+<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a><span class="co">#&gt; Chain 1: </span></span>
+<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a><span class="co">#&gt; Chain 1: Gradient evaluation took 2.9e-05 seconds</span></span>
+<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a><span class="co">#&gt; Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 0.29 seconds.</span></span>
+<span id="cb5-12"><a href="#cb5-12" tabindex="-1"></a><span class="co">#&gt; Chain 1: Adjust your expectations accordingly!</span></span>
+<span id="cb5-13"><a href="#cb5-13" tabindex="-1"></a><span class="co">#&gt; Chain 1: </span></span>
+<span id="cb5-14"><a href="#cb5-14" tabindex="-1"></a><span class="co">#&gt; Chain 1: </span></span>
+<span id="cb5-15"><a href="#cb5-15" tabindex="-1"></a><span class="co">#&gt; Chain 1: Iteration:     1 / 50000 [  0%]  (Warmup)</span></span>
+<span id="cb5-16"><a href="#cb5-16" tabindex="-1"></a><span class="co">#&gt; Chain 1: Iteration:  1001 / 50000 [  2%]  (Sampling)</span></span>
+<span id="cb5-17"><a href="#cb5-17" tabindex="-1"></a><span class="co">#&gt; Chain 1: Iteration:  6000 / 50000 [ 12%]  (Sampling)</span></span>
+<span id="cb5-18"><a href="#cb5-18" tabindex="-1"></a><span class="co">#&gt; Chain 1: Iteration: 11000 / 50000 [ 22%]  (Sampling)</span></span>
+<span id="cb5-19"><a href="#cb5-19" tabindex="-1"></a><span class="co">#&gt; Chain 1: Iteration: 16000 / 50000 [ 32%]  (Sampling)</span></span>
+<span id="cb5-20"><a href="#cb5-20" tabindex="-1"></a><span class="co">#&gt; Chain 1: Iteration: 21000 / 50000 [ 42%]  (Sampling)</span></span>
+<span id="cb5-21"><a href="#cb5-21" tabindex="-1"></a><span class="co">#&gt; Chain 1: Iteration: 26000 / 50000 [ 52%]  (Sampling)</span></span>
+<span id="cb5-22"><a href="#cb5-22" tabindex="-1"></a><span class="co">#&gt; Chain 1: Iteration: 31000 / 50000 [ 62%]  (Sampling)</span></span>
+<span id="cb5-23"><a href="#cb5-23" tabindex="-1"></a><span class="co">#&gt; Chain 1: Iteration: 36000 / 50000 [ 72%]  (Sampling)</span></span>
+<span id="cb5-24"><a href="#cb5-24" tabindex="-1"></a><span class="co">#&gt; Chain 1: Iteration: 41000 / 50000 [ 82%]  (Sampling)</span></span>
+<span id="cb5-25"><a href="#cb5-25" tabindex="-1"></a><span class="co">#&gt; Chain 1: Iteration: 46000 / 50000 [ 92%]  (Sampling)</span></span>
+<span id="cb5-26"><a href="#cb5-26" tabindex="-1"></a><span class="co">#&gt; Chain 1: Iteration: 50000 / 50000 [100%]  (Sampling)</span></span>
+<span id="cb5-27"><a href="#cb5-27" tabindex="-1"></a><span class="co">#&gt; Chain 1: </span></span>
+<span id="cb5-28"><a href="#cb5-28" tabindex="-1"></a><span class="co">#&gt; Chain 1:  Elapsed Time: 0.041 seconds (Warm-up)</span></span>
+<span id="cb5-29"><a href="#cb5-29" tabindex="-1"></a><span class="co">#&gt; Chain 1:                1.892 seconds (Sampling)</span></span>
+<span id="cb5-30"><a href="#cb5-30" tabindex="-1"></a><span class="co">#&gt; Chain 1:                1.933 seconds (Total)</span></span>
+<span id="cb5-31"><a href="#cb5-31" tabindex="-1"></a><span class="co">#&gt; Chain 1: </span></span>
+<span id="cb5-32"><a href="#cb5-32" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb5-33"><a href="#cb5-33" tabindex="-1"></a><span class="co">#&gt; SAMPLING FOR MODEL &#39;stanmodel&#39; NOW (CHAIN 2).</span></span>
+<span id="cb5-34"><a href="#cb5-34" tabindex="-1"></a><span class="co">#&gt; Chain 2: </span></span>
+<span id="cb5-35"><a href="#cb5-35" tabindex="-1"></a><span class="co">#&gt; Chain 2: Gradient evaluation took 7e-06 seconds</span></span>
+<span id="cb5-36"><a href="#cb5-36" tabindex="-1"></a><span class="co">#&gt; Chain 2: 1000 transitions using 10 leapfrog steps per transition would take 0.07 seconds.</span></span>
+<span id="cb5-37"><a href="#cb5-37" tabindex="-1"></a><span class="co">#&gt; Chain 2: Adjust your expectations accordingly!</span></span>
+<span id="cb5-38"><a href="#cb5-38" tabindex="-1"></a><span class="co">#&gt; Chain 2: </span></span>
+<span id="cb5-39"><a href="#cb5-39" tabindex="-1"></a><span class="co">#&gt; Chain 2: </span></span>
+<span id="cb5-40"><a href="#cb5-40" tabindex="-1"></a><span class="co">#&gt; Chain 2: Iteration:     1 / 50000 [  0%]  (Warmup)</span></span>
+<span id="cb5-41"><a href="#cb5-41" tabindex="-1"></a><span class="co">#&gt; Chain 2: Iteration:  1001 / 50000 [  2%]  (Sampling)</span></span>
+<span id="cb5-42"><a href="#cb5-42" tabindex="-1"></a><span class="co">#&gt; Chain 2: Iteration:  6000 / 50000 [ 12%]  (Sampling)</span></span>
+<span id="cb5-43"><a href="#cb5-43" tabindex="-1"></a><span class="co">#&gt; Chain 2: Iteration: 11000 / 50000 [ 22%]  (Sampling)</span></span>
+<span id="cb5-44"><a href="#cb5-44" tabindex="-1"></a><span class="co">#&gt; Chain 2: Iteration: 16000 / 50000 [ 32%]  (Sampling)</span></span>
+<span id="cb5-45"><a href="#cb5-45" tabindex="-1"></a><span class="co">#&gt; Chain 2: Iteration: 21000 / 50000 [ 42%]  (Sampling)</span></span>
+<span id="cb5-46"><a href="#cb5-46" tabindex="-1"></a><span class="co">#&gt; Chain 2: Iteration: 26000 / 50000 [ 52%]  (Sampling)</span></span>
+<span id="cb5-47"><a href="#cb5-47" tabindex="-1"></a><span class="co">#&gt; Chain 2: Iteration: 31000 / 50000 [ 62%]  (Sampling)</span></span>
+<span id="cb5-48"><a href="#cb5-48" tabindex="-1"></a><span class="co">#&gt; Chain 2: Iteration: 36000 / 50000 [ 72%]  (Sampling)</span></span>
+<span id="cb5-49"><a href="#cb5-49" tabindex="-1"></a><span class="co">#&gt; Chain 2: Iteration: 41000 / 50000 [ 82%]  (Sampling)</span></span>
+<span id="cb5-50"><a href="#cb5-50" tabindex="-1"></a><span class="co">#&gt; Chain 2: Iteration: 46000 / 50000 [ 92%]  (Sampling)</span></span>
+<span id="cb5-51"><a href="#cb5-51" tabindex="-1"></a><span class="co">#&gt; Chain 2: Iteration: 50000 / 50000 [100%]  (Sampling)</span></span>
+<span id="cb5-52"><a href="#cb5-52" tabindex="-1"></a><span class="co">#&gt; Chain 2: </span></span>
+<span id="cb5-53"><a href="#cb5-53" tabindex="-1"></a><span class="co">#&gt; Chain 2:  Elapsed Time: 0.043 seconds (Warm-up)</span></span>
+<span id="cb5-54"><a href="#cb5-54" tabindex="-1"></a><span class="co">#&gt; Chain 2:                1.742 seconds (Sampling)</span></span>
+<span id="cb5-55"><a href="#cb5-55" tabindex="-1"></a><span class="co">#&gt; Chain 2:                1.785 seconds (Total)</span></span>
+<span id="cb5-56"><a href="#cb5-56" tabindex="-1"></a><span class="co">#&gt; Chain 2: </span></span>
+<span id="cb5-57"><a href="#cb5-57" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb5-58"><a href="#cb5-58" tabindex="-1"></a><span class="co">#&gt; SAMPLING FOR MODEL &#39;stanmodel&#39; NOW (CHAIN 3).</span></span>
+<span id="cb5-59"><a href="#cb5-59" tabindex="-1"></a><span class="co">#&gt; Chain 3: </span></span>
+<span id="cb5-60"><a href="#cb5-60" tabindex="-1"></a><span class="co">#&gt; Chain 3: Gradient evaluation took 8e-06 seconds</span></span>
+<span id="cb5-61"><a href="#cb5-61" tabindex="-1"></a><span class="co">#&gt; Chain 3: 1000 transitions using 10 leapfrog steps per transition would take 0.08 seconds.</span></span>
+<span id="cb5-62"><a href="#cb5-62" tabindex="-1"></a><span class="co">#&gt; Chain 3: Adjust your expectations accordingly!</span></span>
+<span id="cb5-63"><a href="#cb5-63" tabindex="-1"></a><span class="co">#&gt; Chain 3: </span></span>
+<span id="cb5-64"><a href="#cb5-64" tabindex="-1"></a><span class="co">#&gt; Chain 3: </span></span>
+<span id="cb5-65"><a href="#cb5-65" tabindex="-1"></a><span class="co">#&gt; Chain 3: Iteration:     1 / 50000 [  0%]  (Warmup)</span></span>
+<span id="cb5-66"><a href="#cb5-66" tabindex="-1"></a><span class="co">#&gt; Chain 3: Iteration:  1001 / 50000 [  2%]  (Sampling)</span></span>
+<span id="cb5-67"><a href="#cb5-67" tabindex="-1"></a><span class="co">#&gt; Chain 3: Iteration:  6000 / 50000 [ 12%]  (Sampling)</span></span>
+<span id="cb5-68"><a href="#cb5-68" tabindex="-1"></a><span class="co">#&gt; Chain 3: Iteration: 11000 / 50000 [ 22%]  (Sampling)</span></span>
+<span id="cb5-69"><a href="#cb5-69" tabindex="-1"></a><span class="co">#&gt; Chain 3: Iteration: 16000 / 50000 [ 32%]  (Sampling)</span></span>
+<span id="cb5-70"><a href="#cb5-70" tabindex="-1"></a><span class="co">#&gt; Chain 3: Iteration: 21000 / 50000 [ 42%]  (Sampling)</span></span>
+<span id="cb5-71"><a href="#cb5-71" tabindex="-1"></a><span class="co">#&gt; Chain 3: Iteration: 26000 / 50000 [ 52%]  (Sampling)</span></span>
+<span id="cb5-72"><a href="#cb5-72" tabindex="-1"></a><span class="co">#&gt; Chain 3: Iteration: 31000 / 50000 [ 62%]  (Sampling)</span></span>
+<span id="cb5-73"><a href="#cb5-73" tabindex="-1"></a><span class="co">#&gt; Chain 3: Iteration: 36000 / 50000 [ 72%]  (Sampling)</span></span>
+<span id="cb5-74"><a href="#cb5-74" tabindex="-1"></a><span class="co">#&gt; Chain 3: Iteration: 41000 / 50000 [ 82%]  (Sampling)</span></span>
+<span id="cb5-75"><a href="#cb5-75" tabindex="-1"></a><span class="co">#&gt; Chain 3: Iteration: 46000 / 50000 [ 92%]  (Sampling)</span></span>
+<span id="cb5-76"><a href="#cb5-76" tabindex="-1"></a><span class="co">#&gt; Chain 3: Iteration: 50000 / 50000 [100%]  (Sampling)</span></span>
+<span id="cb5-77"><a href="#cb5-77" tabindex="-1"></a><span class="co">#&gt; Chain 3: </span></span>
+<span id="cb5-78"><a href="#cb5-78" tabindex="-1"></a><span class="co">#&gt; Chain 3:  Elapsed Time: 0.04 seconds (Warm-up)</span></span>
+<span id="cb5-79"><a href="#cb5-79" tabindex="-1"></a><span class="co">#&gt; Chain 3:                1.716 seconds (Sampling)</span></span>
+<span id="cb5-80"><a href="#cb5-80" tabindex="-1"></a><span class="co">#&gt; Chain 3:                1.756 seconds (Total)</span></span>
+<span id="cb5-81"><a href="#cb5-81" tabindex="-1"></a><span class="co">#&gt; Chain 3:</span></span>
+<span id="cb5-82"><a href="#cb5-82" tabindex="-1"></a>stanfitH1 <span class="ot">&lt;-</span> <span class="fu">sampling</span>(stanmodelH1, <span class="at">data =</span> <span class="fu">list</span>(<span class="at">y =</span> y, <span class="at">n =</span> n,</span>
+<span id="cb5-83"><a href="#cb5-83" tabindex="-1"></a>                                               <span class="at">mu0 =</span> mu0,</span>
+<span id="cb5-84"><a href="#cb5-84" tabindex="-1"></a>                                               <span class="at">tau20 =</span> tau20,</span>
+<span id="cb5-85"><a href="#cb5-85" tabindex="-1"></a>                                               <span class="at">alpha =</span> alpha,</span>
+<span id="cb5-86"><a href="#cb5-86" tabindex="-1"></a>                                               <span class="at">beta =</span> beta,</span>
+<span id="cb5-87"><a href="#cb5-87" tabindex="-1"></a>                                               <span class="at">sigma2 =</span> sigma2),</span>
+<span id="cb5-88"><a href="#cb5-88" tabindex="-1"></a>                      <span class="at">iter =</span> <span class="dv">50000</span>, <span class="at">warmup =</span> <span class="dv">1000</span>, <span class="at">chains =</span> <span class="dv">3</span>, <span class="at">cores =</span> <span class="dv">1</span>, <span class="at">seed =</span> <span class="dv">12345</span>)</span>
+<span id="cb5-89"><a href="#cb5-89" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb5-90"><a href="#cb5-90" tabindex="-1"></a><span class="co">#&gt; SAMPLING FOR MODEL &#39;stanmodel&#39; NOW (CHAIN 1).</span></span>
+<span id="cb5-91"><a href="#cb5-91" tabindex="-1"></a><span class="co">#&gt; Chain 1: </span></span>
+<span id="cb5-92"><a href="#cb5-92" tabindex="-1"></a><span class="co">#&gt; Chain 1: Gradient evaluation took 3.1e-05 seconds</span></span>
+<span id="cb5-93"><a href="#cb5-93" tabindex="-1"></a><span class="co">#&gt; Chain 1: 1000 transitions using 10 leapfrog steps per transition would take 0.31 seconds.</span></span>
+<span id="cb5-94"><a href="#cb5-94" tabindex="-1"></a><span class="co">#&gt; Chain 1: Adjust your expectations accordingly!</span></span>
+<span id="cb5-95"><a href="#cb5-95" tabindex="-1"></a><span class="co">#&gt; Chain 1: </span></span>
+<span id="cb5-96"><a href="#cb5-96" tabindex="-1"></a><span class="co">#&gt; Chain 1: </span></span>
+<span id="cb5-97"><a href="#cb5-97" tabindex="-1"></a><span class="co">#&gt; Chain 1: Iteration:     1 / 50000 [  0%]  (Warmup)</span></span>
+<span id="cb5-98"><a href="#cb5-98" tabindex="-1"></a><span class="co">#&gt; Chain 1: Iteration:  1001 / 50000 [  2%]  (Sampling)</span></span>
+<span id="cb5-99"><a href="#cb5-99" tabindex="-1"></a><span class="co">#&gt; Chain 1: Iteration:  6000 / 50000 [ 12%]  (Sampling)</span></span>
+<span id="cb5-100"><a href="#cb5-100" tabindex="-1"></a><span class="co">#&gt; Chain 1: Iteration: 11000 / 50000 [ 22%]  (Sampling)</span></span>
+<span id="cb5-101"><a href="#cb5-101" tabindex="-1"></a><span class="co">#&gt; Chain 1: Iteration: 16000 / 50000 [ 32%]  (Sampling)</span></span>
+<span id="cb5-102"><a href="#cb5-102" tabindex="-1"></a><span class="co">#&gt; Chain 1: Iteration: 21000 / 50000 [ 42%]  (Sampling)</span></span>
+<span id="cb5-103"><a href="#cb5-103" tabindex="-1"></a><span class="co">#&gt; Chain 1: Iteration: 26000 / 50000 [ 52%]  (Sampling)</span></span>
+<span id="cb5-104"><a href="#cb5-104" tabindex="-1"></a><span class="co">#&gt; Chain 1: Iteration: 31000 / 50000 [ 62%]  (Sampling)</span></span>
+<span id="cb5-105"><a href="#cb5-105" tabindex="-1"></a><span class="co">#&gt; Chain 1: Iteration: 36000 / 50000 [ 72%]  (Sampling)</span></span>
+<span id="cb5-106"><a href="#cb5-106" tabindex="-1"></a><span class="co">#&gt; Chain 1: Iteration: 41000 / 50000 [ 82%]  (Sampling)</span></span>
+<span id="cb5-107"><a href="#cb5-107" tabindex="-1"></a><span class="co">#&gt; Chain 1: Iteration: 46000 / 50000 [ 92%]  (Sampling)</span></span>
+<span id="cb5-108"><a href="#cb5-108" tabindex="-1"></a><span class="co">#&gt; Chain 1: Iteration: 50000 / 50000 [100%]  (Sampling)</span></span>
+<span id="cb5-109"><a href="#cb5-109" tabindex="-1"></a><span class="co">#&gt; Chain 1: </span></span>
+<span id="cb5-110"><a href="#cb5-110" tabindex="-1"></a><span class="co">#&gt; Chain 1:  Elapsed Time: 0.048 seconds (Warm-up)</span></span>
+<span id="cb5-111"><a href="#cb5-111" tabindex="-1"></a><span class="co">#&gt; Chain 1:                2.546 seconds (Sampling)</span></span>
+<span id="cb5-112"><a href="#cb5-112" tabindex="-1"></a><span class="co">#&gt; Chain 1:                2.594 seconds (Total)</span></span>
+<span id="cb5-113"><a href="#cb5-113" tabindex="-1"></a><span class="co">#&gt; Chain 1: </span></span>
+<span id="cb5-114"><a href="#cb5-114" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb5-115"><a href="#cb5-115" tabindex="-1"></a><span class="co">#&gt; SAMPLING FOR MODEL &#39;stanmodel&#39; NOW (CHAIN 2).</span></span>
+<span id="cb5-116"><a href="#cb5-116" tabindex="-1"></a><span class="co">#&gt; Chain 2: </span></span>
+<span id="cb5-117"><a href="#cb5-117" tabindex="-1"></a><span class="co">#&gt; Chain 2: Gradient evaluation took 8e-06 seconds</span></span>
+<span id="cb5-118"><a href="#cb5-118" tabindex="-1"></a><span class="co">#&gt; Chain 2: 1000 transitions using 10 leapfrog steps per transition would take 0.08 seconds.</span></span>
+<span id="cb5-119"><a href="#cb5-119" tabindex="-1"></a><span class="co">#&gt; Chain 2: Adjust your expectations accordingly!</span></span>
+<span id="cb5-120"><a href="#cb5-120" tabindex="-1"></a><span class="co">#&gt; Chain 2: </span></span>
+<span id="cb5-121"><a href="#cb5-121" tabindex="-1"></a><span class="co">#&gt; Chain 2: </span></span>
+<span id="cb5-122"><a href="#cb5-122" tabindex="-1"></a><span class="co">#&gt; Chain 2: Iteration:     1 / 50000 [  0%]  (Warmup)</span></span>
+<span id="cb5-123"><a href="#cb5-123" tabindex="-1"></a><span class="co">#&gt; Chain 2: Iteration:  1001 / 50000 [  2%]  (Sampling)</span></span>
+<span id="cb5-124"><a href="#cb5-124" tabindex="-1"></a><span class="co">#&gt; Chain 2: Iteration:  6000 / 50000 [ 12%]  (Sampling)</span></span>
+<span id="cb5-125"><a href="#cb5-125" tabindex="-1"></a><span class="co">#&gt; Chain 2: Iteration: 11000 / 50000 [ 22%]  (Sampling)</span></span>
+<span id="cb5-126"><a href="#cb5-126" tabindex="-1"></a><span class="co">#&gt; Chain 2: Iteration: 16000 / 50000 [ 32%]  (Sampling)</span></span>
+<span id="cb5-127"><a href="#cb5-127" tabindex="-1"></a><span class="co">#&gt; Chain 2: Iteration: 21000 / 50000 [ 42%]  (Sampling)</span></span>
+<span id="cb5-128"><a href="#cb5-128" tabindex="-1"></a><span class="co">#&gt; Chain 2: Iteration: 26000 / 50000 [ 52%]  (Sampling)</span></span>
+<span id="cb5-129"><a href="#cb5-129" tabindex="-1"></a><span class="co">#&gt; Chain 2: Iteration: 31000 / 50000 [ 62%]  (Sampling)</span></span>
+<span id="cb5-130"><a href="#cb5-130" tabindex="-1"></a><span class="co">#&gt; Chain 2: Iteration: 36000 / 50000 [ 72%]  (Sampling)</span></span>
+<span id="cb5-131"><a href="#cb5-131" tabindex="-1"></a><span class="co">#&gt; Chain 2: Iteration: 41000 / 50000 [ 82%]  (Sampling)</span></span>
+<span id="cb5-132"><a href="#cb5-132" tabindex="-1"></a><span class="co">#&gt; Chain 2: Iteration: 46000 / 50000 [ 92%]  (Sampling)</span></span>
+<span id="cb5-133"><a href="#cb5-133" tabindex="-1"></a><span class="co">#&gt; Chain 2: Iteration: 50000 / 50000 [100%]  (Sampling)</span></span>
+<span id="cb5-134"><a href="#cb5-134" tabindex="-1"></a><span class="co">#&gt; Chain 2: </span></span>
+<span id="cb5-135"><a href="#cb5-135" tabindex="-1"></a><span class="co">#&gt; Chain 2:  Elapsed Time: 0.049 seconds (Warm-up)</span></span>
+<span id="cb5-136"><a href="#cb5-136" tabindex="-1"></a><span class="co">#&gt; Chain 2:                2.274 seconds (Sampling)</span></span>
+<span id="cb5-137"><a href="#cb5-137" tabindex="-1"></a><span class="co">#&gt; Chain 2:                2.323 seconds (Total)</span></span>
+<span id="cb5-138"><a href="#cb5-138" tabindex="-1"></a><span class="co">#&gt; Chain 2: </span></span>
+<span id="cb5-139"><a href="#cb5-139" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb5-140"><a href="#cb5-140" tabindex="-1"></a><span class="co">#&gt; SAMPLING FOR MODEL &#39;stanmodel&#39; NOW (CHAIN 3).</span></span>
+<span id="cb5-141"><a href="#cb5-141" tabindex="-1"></a><span class="co">#&gt; Chain 3: </span></span>
+<span id="cb5-142"><a href="#cb5-142" tabindex="-1"></a><span class="co">#&gt; Chain 3: Gradient evaluation took 8e-06 seconds</span></span>
+<span id="cb5-143"><a href="#cb5-143" tabindex="-1"></a><span class="co">#&gt; Chain 3: 1000 transitions using 10 leapfrog steps per transition would take 0.08 seconds.</span></span>
+<span id="cb5-144"><a href="#cb5-144" tabindex="-1"></a><span class="co">#&gt; Chain 3: Adjust your expectations accordingly!</span></span>
+<span id="cb5-145"><a href="#cb5-145" tabindex="-1"></a><span class="co">#&gt; Chain 3: </span></span>
+<span id="cb5-146"><a href="#cb5-146" tabindex="-1"></a><span class="co">#&gt; Chain 3: </span></span>
+<span id="cb5-147"><a href="#cb5-147" tabindex="-1"></a><span class="co">#&gt; Chain 3: Iteration:     1 / 50000 [  0%]  (Warmup)</span></span>
+<span id="cb5-148"><a href="#cb5-148" tabindex="-1"></a><span class="co">#&gt; Chain 3: Iteration:  1001 / 50000 [  2%]  (Sampling)</span></span>
+<span id="cb5-149"><a href="#cb5-149" tabindex="-1"></a><span class="co">#&gt; Chain 3: Iteration:  6000 / 50000 [ 12%]  (Sampling)</span></span>
+<span id="cb5-150"><a href="#cb5-150" tabindex="-1"></a><span class="co">#&gt; Chain 3: Iteration: 11000 / 50000 [ 22%]  (Sampling)</span></span>
+<span id="cb5-151"><a href="#cb5-151" tabindex="-1"></a><span class="co">#&gt; Chain 3: Iteration: 16000 / 50000 [ 32%]  (Sampling)</span></span>
+<span id="cb5-152"><a href="#cb5-152" tabindex="-1"></a><span class="co">#&gt; Chain 3: Iteration: 21000 / 50000 [ 42%]  (Sampling)</span></span>
+<span id="cb5-153"><a href="#cb5-153" tabindex="-1"></a><span class="co">#&gt; Chain 3: Iteration: 26000 / 50000 [ 52%]  (Sampling)</span></span>
+<span id="cb5-154"><a href="#cb5-154" tabindex="-1"></a><span class="co">#&gt; Chain 3: Iteration: 31000 / 50000 [ 62%]  (Sampling)</span></span>
+<span id="cb5-155"><a href="#cb5-155" tabindex="-1"></a><span class="co">#&gt; Chain 3: Iteration: 36000 / 50000 [ 72%]  (Sampling)</span></span>
+<span id="cb5-156"><a href="#cb5-156" tabindex="-1"></a><span class="co">#&gt; Chain 3: Iteration: 41000 / 50000 [ 82%]  (Sampling)</span></span>
+<span id="cb5-157"><a href="#cb5-157" tabindex="-1"></a><span class="co">#&gt; Chain 3: Iteration: 46000 / 50000 [ 92%]  (Sampling)</span></span>
+<span id="cb5-158"><a href="#cb5-158" tabindex="-1"></a><span class="co">#&gt; Chain 3: Iteration: 50000 / 50000 [100%]  (Sampling)</span></span>
+<span id="cb5-159"><a href="#cb5-159" tabindex="-1"></a><span class="co">#&gt; Chain 3: </span></span>
+<span id="cb5-160"><a href="#cb5-160" tabindex="-1"></a><span class="co">#&gt; Chain 3:  Elapsed Time: 0.049 seconds (Warm-up)</span></span>
+<span id="cb5-161"><a href="#cb5-161" tabindex="-1"></a><span class="co">#&gt; Chain 3:                2.818 seconds (Sampling)</span></span>
+<span id="cb5-162"><a href="#cb5-162" tabindex="-1"></a><span class="co">#&gt; Chain 3:                2.867 seconds (Total)</span></span>
+<span id="cb5-163"><a href="#cb5-163" tabindex="-1"></a><span class="co">#&gt; Chain 3:</span></span></code></pre></div>
+</div>
+<div id="estimate-log-marginal-likelihoods-using-bridgesampling" class="section level1">
+<h1>Estimate log marginal likelihoods using bridgesampling</h1>
+<p>Now load the bridgesampling package and estimate the log marginal
+likelihood for each model. The null model <span class="math inline">\(\cal{H}_0\)</span> is slightly preferred, which
+makes sense because the data were simulated assuming <span class="math inline">\(\mu=0\)</span>.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="co"># compute log marginal likelihood via bridge sampling for H0</span></span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a>H0.bridge <span class="ot">&lt;-</span> <span class="fu">bridge_sampler</span>(stanfitH0, <span class="at">silent =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a><span class="co"># compute log marginal likelihood via bridge sampling for H1</span></span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a>H1.bridge <span class="ot">&lt;-</span> <span class="fu">bridge_sampler</span>(stanfitH1, <span class="at">silent =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb6-6"><a href="#cb6-6" tabindex="-1"></a></span>
+<span id="cb6-7"><a href="#cb6-7" tabindex="-1"></a><span class="fu">print</span>(H0.bridge)</span>
+<span id="cb6-8"><a href="#cb6-8" tabindex="-1"></a><span class="co">#&gt; Bridge sampling estimate of the log marginal likelihood: -37.53668</span></span>
+<span id="cb6-9"><a href="#cb6-9" tabindex="-1"></a><span class="co">#&gt; Estimate obtained in 4 iteration(s) via method &quot;normal&quot;.</span></span>
+<span id="cb6-10"><a href="#cb6-10" tabindex="-1"></a><span class="fu">print</span>(H1.bridge)</span>
+<span id="cb6-11"><a href="#cb6-11" tabindex="-1"></a><span class="co">#&gt; Bridge sampling estimate of the log marginal likelihood: -37.7984</span></span>
+<span id="cb6-12"><a href="#cb6-12" tabindex="-1"></a><span class="co">#&gt; Estimate obtained in 4 iteration(s) via method &quot;normal&quot;.</span></span></code></pre></div>
+<p>The log marginal likelihood estimates are -37.53668 for <span class="math inline">\({\cal H}_0\)</span> and -37.7984 for <span class="math inline">\({\cal H}_1\)</span>.</p>
+</div>
+<div id="estimate-log-marginal-likelihoods-using-lorad" class="section level1">
+<h1>Estimate log marginal likelihoods using LoRaD</h1>
+<div id="export-the-sampled-parameters" class="section level2">
+<h2>Export the sampled parameters</h2>
+<p>In order to use the LoRaD method, we need to export the sampled
+parameter values along with the unnormalized log posterior to a data
+frame. The <code>permuted=TRUE</code> setting causes samples from all 3
+chains to be merged.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a>paramsH0 <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">extract</span>(stanfitH0, <span class="at">permuted=</span><span class="cn">TRUE</span>))</span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a>paramsH1 <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="fu">extract</span>(stanfitH1, <span class="at">permuted=</span><span class="cn">TRUE</span>))</span></code></pre></div>
+</div>
+<div id="the-null-hypothesis" class="section level2">
+<h2>The null hypothesis</h2>
+<p>After loading the lorad package, specify what each column in the
+exported parameter file represents. STAN transforms all parameters so
+that they are unconstrained (e.g. it log-transforms parameters with
+support restricted to the positive real numbers so that the transformed
+parameter has support equal to the entire real line). This means that
+the lorad package need not perform any transformations. Create a named
+list that specifies <em>unconstrained</em> for all columns and
+<em>posterior</em> for the column labeled <code>lp</code>. The lorad
+package assumes that all columns labeled <em>posterior</em> should be
+summed to form the log posterior kernel (the posterior kernel is simply
+the unnormalized posterior: the product of prior and likelihood).</p>
+<p>The command <code>lorad_estimate</code> estimates the log marginal
+likelihood. This function is provided</p>
+<ul>
+<li>a data frame (<code>paramsH0</code>) containing the sampled
+parameter vectors</li>
+<li>a named list (<code>colspecH0</code>) containing the column
+specifications</li>
+<li>the fraction (0.5) of the sample to be used for training</li>
+<li>a string specifying whether the <em>training</em> sample should be
+the first part (<code>left</code>), the last part (<code>right</code>),
+or a random sample (<code>random</code>) of the parameter vectors in
+<code>paramsH0</code></li>
+<li>the fraction (0.1) of the <em>estimation</em> sample (i.e. the
+remaining parameter vectors after removing the training fraction) to be
+used by LoRaD.</li>
+</ul>
+<p>The LoRaD method uses the training sample to determine the mean and
+covariance matrix used to standardize the parameter vectors and the
+radius to be used in defining the working parameter space. It then uses
+only a small <em>coverage</em> fraction of the highest density points in
+the remaining estimation sample to estimate the marginal likelihood. The
+values 0.5 and 0.1 are generally good values to use for the training
+fraction and coverage. Using too large a fraction for coverage risks a
+poor fit of the multivariate normal reference distribution to the
+sampled values inside the working parameter space.</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a>colspecH0 <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;tau2&quot;</span><span class="ot">=</span><span class="st">&quot;unconstrained&quot;</span>, <span class="st">&quot;theta.1&quot;</span><span class="ot">=</span><span class="st">&quot;unconstrained&quot;</span>, <span class="st">&quot;theta.2&quot;</span><span class="ot">=</span><span class="st">&quot;unconstrained&quot;</span>, <span class="st">&quot;theta.3&quot;</span><span class="ot">=</span><span class="st">&quot;unconstrained&quot;</span>, <span class="st">&quot;theta.4&quot;</span><span class="ot">=</span><span class="st">&quot;unconstrained&quot;</span>, <span class="st">&quot;theta.5&quot;</span><span class="ot">=</span><span class="st">&quot;unconstrained&quot;</span>, <span class="st">&quot;theta.6&quot;</span><span class="ot">=</span><span class="st">&quot;unconstrained&quot;</span>, <span class="st">&quot;theta.7&quot;</span><span class="ot">=</span><span class="st">&quot;unconstrained&quot;</span>, <span class="st">&quot;theta.8&quot;</span><span class="ot">=</span><span class="st">&quot;unconstrained&quot;</span>, <span class="st">&quot;theta.9&quot;</span><span class="ot">=</span><span class="st">&quot;unconstrained&quot;</span>, <span class="st">&quot;theta.10&quot;</span><span class="ot">=</span><span class="st">&quot;unconstrained&quot;</span>, <span class="st">&quot;theta.11&quot;</span><span class="ot">=</span><span class="st">&quot;unconstrained&quot;</span>, <span class="st">&quot;theta.12&quot;</span><span class="ot">=</span><span class="st">&quot;unconstrained&quot;</span>, <span class="st">&quot;theta.13&quot;</span><span class="ot">=</span><span class="st">&quot;unconstrained&quot;</span>, <span class="st">&quot;theta.14&quot;</span><span class="ot">=</span><span class="st">&quot;unconstrained&quot;</span>, <span class="st">&quot;theta.15&quot;</span><span class="ot">=</span><span class="st">&quot;unconstrained&quot;</span>, <span class="st">&quot;theta.16&quot;</span><span class="ot">=</span><span class="st">&quot;unconstrained&quot;</span>, <span class="st">&quot;theta.17&quot;</span><span class="ot">=</span><span class="st">&quot;unconstrained&quot;</span>, <span class="st">&quot;theta.18&quot;</span><span class="ot">=</span><span class="st">&quot;unconstrained&quot;</span>, <span class="st">&quot;theta.19&quot;</span><span class="ot">=</span><span class="st">&quot;unconstrained&quot;</span>, <span class="st">&quot;theta.20&quot;</span><span class="ot">=</span><span class="st">&quot;unconstrained&quot;</span>, <span class="st">&quot;lp__&quot;</span><span class="ot">=</span><span class="st">&quot;posterior&quot;</span>)</span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a>results0 <span class="ot">&lt;-</span> <span class="fu">lorad_estimate</span>(paramsH0, colspecH0, <span class="fl">0.5</span>, <span class="st">&quot;random&quot;</span>, <span class="fl">0.1</span>)</span>
+<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a><span class="fu">lorad_summary</span>(results0)</span>
+<span id="cb8-4"><a href="#cb8-4" tabindex="-1"></a><span class="co">#&gt; This is lorad 0.0.1.0 </span></span>
+<span id="cb8-5"><a href="#cb8-5" tabindex="-1"></a><span class="co">#&gt;     Parameter sample comprises 147000 sampled points</span></span>
+<span id="cb8-6"><a href="#cb8-6" tabindex="-1"></a><span class="co">#&gt;     Each sample point is a vector of 21 parameter values</span></span>
+<span id="cb8-7"><a href="#cb8-7" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb8-8"><a href="#cb8-8" tabindex="-1"></a><span class="co">#&gt;    Training fraction is 0.5</span></span>
+<span id="cb8-9"><a href="#cb8-9" tabindex="-1"></a><span class="co">#&gt;     Coverage specified is 0.1</span></span>
+<span id="cb8-10"><a href="#cb8-10" tabindex="-1"></a><span class="co">#&gt;  </span></span>
+<span id="cb8-11"><a href="#cb8-11" tabindex="-1"></a><span class="co">#&gt; Partitioning samples into training and estimation:</span></span>
+<span id="cb8-12"><a href="#cb8-12" tabindex="-1"></a><span class="co">#&gt;     Sample size is 147000</span></span>
+<span id="cb8-13"><a href="#cb8-13" tabindex="-1"></a><span class="co">#&gt;     Training sample size is 73500</span></span>
+<span id="cb8-14"><a href="#cb8-14" tabindex="-1"></a><span class="co">#&gt;     Estimation sample size 73500</span></span>
+<span id="cb8-15"><a href="#cb8-15" tabindex="-1"></a><span class="co">#&gt;  </span></span>
+<span id="cb8-16"><a href="#cb8-16" tabindex="-1"></a><span class="co">#&gt; Processing training sample...</span></span>
+<span id="cb8-17"><a href="#cb8-17" tabindex="-1"></a><span class="co">#&gt;     Lowest radial distance is 3.418842393</span></span>
+<span id="cb8-18"><a href="#cb8-18" tabindex="-1"></a><span class="co">#&gt;     Log Delta -2.949772427</span></span>
+<span id="cb8-19"><a href="#cb8-19" tabindex="-1"></a><span class="co">#&gt;  </span></span>
+<span id="cb8-20"><a href="#cb8-20" tabindex="-1"></a><span class="co">#&gt; Processing estimation sample...</span></span>
+<span id="cb8-21"><a href="#cb8-21" tabindex="-1"></a><span class="co">#&gt;     Number of samples used is 7335</span></span>
+<span id="cb8-22"><a href="#cb8-22" tabindex="-1"></a><span class="co">#&gt;     Nominal coverage specified is 0.100000</span></span>
+<span id="cb8-23"><a href="#cb8-23" tabindex="-1"></a><span class="co">#&gt;     Realized coverage is 0.099796</span></span>
+<span id="cb8-24"><a href="#cb8-24" tabindex="-1"></a><span class="co">#&gt;     Log marginal likelihood is -37.385193</span></span>
+<span id="cb8-25"><a href="#cb8-25" tabindex="-1"></a><span class="co">#&gt; </span></span></code></pre></div>
+<p>The log marginal likelihood for the null hypothesis, estimated by
+LoRaD, is -37.385193, which is quite close to the value -37.53668
+estimated by the bridgesampling package.</p>
+</div>
+<div id="the-alternative-hypothesis" class="section level2">
+<h2>The alternative hypothesis</h2>
+<p>Repeat the LoRaD analysis for the alternative hypothesis.</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a>colspecH1 <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">&quot;mu&quot;</span><span class="ot">=</span><span class="st">&quot;unconstrained&quot;</span>, <span class="st">&quot;tau2&quot;</span><span class="ot">=</span><span class="st">&quot;unconstrained&quot;</span>, <span class="st">&quot;theta.1&quot;</span><span class="ot">=</span><span class="st">&quot;unconstrained&quot;</span>, <span class="st">&quot;theta.2&quot;</span><span class="ot">=</span><span class="st">&quot;unconstrained&quot;</span>, <span class="st">&quot;theta.3&quot;</span><span class="ot">=</span><span class="st">&quot;unconstrained&quot;</span>, <span class="st">&quot;theta.4&quot;</span><span class="ot">=</span><span class="st">&quot;unconstrained&quot;</span>, <span class="st">&quot;theta.5&quot;</span><span class="ot">=</span><span class="st">&quot;unconstrained&quot;</span>, <span class="st">&quot;theta.6&quot;</span><span class="ot">=</span><span class="st">&quot;unconstrained&quot;</span>, <span class="st">&quot;theta.7&quot;</span><span class="ot">=</span><span class="st">&quot;unconstrained&quot;</span>, <span class="st">&quot;theta.8&quot;</span><span class="ot">=</span><span class="st">&quot;unconstrained&quot;</span>, <span class="st">&quot;theta.9&quot;</span><span class="ot">=</span><span class="st">&quot;unconstrained&quot;</span>, <span class="st">&quot;theta.10&quot;</span><span class="ot">=</span><span class="st">&quot;unconstrained&quot;</span>, <span class="st">&quot;theta.11&quot;</span><span class="ot">=</span><span class="st">&quot;unconstrained&quot;</span>, <span class="st">&quot;theta.12&quot;</span><span class="ot">=</span><span class="st">&quot;unconstrained&quot;</span>, <span class="st">&quot;theta.13&quot;</span><span class="ot">=</span><span class="st">&quot;unconstrained&quot;</span>, <span class="st">&quot;theta.14&quot;</span><span class="ot">=</span><span class="st">&quot;unconstrained&quot;</span>, <span class="st">&quot;theta.15&quot;</span><span class="ot">=</span><span class="st">&quot;unconstrained&quot;</span>, <span class="st">&quot;theta.16&quot;</span><span class="ot">=</span><span class="st">&quot;unconstrained&quot;</span>, <span class="st">&quot;theta.17&quot;</span><span class="ot">=</span><span class="st">&quot;unconstrained&quot;</span>, <span class="st">&quot;theta.18&quot;</span><span class="ot">=</span><span class="st">&quot;unconstrained&quot;</span>, <span class="st">&quot;theta.19&quot;</span><span class="ot">=</span><span class="st">&quot;unconstrained&quot;</span>, <span class="st">&quot;theta.20&quot;</span><span class="ot">=</span><span class="st">&quot;unconstrained&quot;</span>, <span class="st">&quot;lp__&quot;</span><span class="ot">=</span><span class="st">&quot;posterior&quot;</span>)</span>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a>results1 <span class="ot">&lt;-</span> <span class="fu">lorad_estimate</span>(paramsH1, colspecH1, <span class="fl">0.5</span>, <span class="st">&quot;random&quot;</span>, <span class="fl">0.1</span>)</span>
+<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a><span class="fu">lorad_summary</span>(results1)</span>
+<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a><span class="co">#&gt; This is lorad 0.0.1.0 </span></span>
+<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a><span class="co">#&gt;     Parameter sample comprises 147000 sampled points</span></span>
+<span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a><span class="co">#&gt;     Each sample point is a vector of 22 parameter values</span></span>
+<span id="cb9-7"><a href="#cb9-7" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb9-8"><a href="#cb9-8" tabindex="-1"></a><span class="co">#&gt;    Training fraction is 0.5</span></span>
+<span id="cb9-9"><a href="#cb9-9" tabindex="-1"></a><span class="co">#&gt;     Coverage specified is 0.1</span></span>
+<span id="cb9-10"><a href="#cb9-10" tabindex="-1"></a><span class="co">#&gt;  </span></span>
+<span id="cb9-11"><a href="#cb9-11" tabindex="-1"></a><span class="co">#&gt; Partitioning samples into training and estimation:</span></span>
+<span id="cb9-12"><a href="#cb9-12" tabindex="-1"></a><span class="co">#&gt;     Sample size is 147000</span></span>
+<span id="cb9-13"><a href="#cb9-13" tabindex="-1"></a><span class="co">#&gt;     Training sample size is 73500</span></span>
+<span id="cb9-14"><a href="#cb9-14" tabindex="-1"></a><span class="co">#&gt;     Estimation sample size 73500</span></span>
+<span id="cb9-15"><a href="#cb9-15" tabindex="-1"></a><span class="co">#&gt;  </span></span>
+<span id="cb9-16"><a href="#cb9-16" tabindex="-1"></a><span class="co">#&gt; Processing training sample...</span></span>
+<span id="cb9-17"><a href="#cb9-17" tabindex="-1"></a><span class="co">#&gt;     Lowest radial distance is 3.483237724</span></span>
+<span id="cb9-18"><a href="#cb9-18" tabindex="-1"></a><span class="co">#&gt;     Log Delta -3.091635220</span></span>
+<span id="cb9-19"><a href="#cb9-19" tabindex="-1"></a><span class="co">#&gt;  </span></span>
+<span id="cb9-20"><a href="#cb9-20" tabindex="-1"></a><span class="co">#&gt; Processing estimation sample...</span></span>
+<span id="cb9-21"><a href="#cb9-21" tabindex="-1"></a><span class="co">#&gt;     Number of samples used is 7161</span></span>
+<span id="cb9-22"><a href="#cb9-22" tabindex="-1"></a><span class="co">#&gt;     Nominal coverage specified is 0.100000</span></span>
+<span id="cb9-23"><a href="#cb9-23" tabindex="-1"></a><span class="co">#&gt;     Realized coverage is 0.097429</span></span>
+<span id="cb9-24"><a href="#cb9-24" tabindex="-1"></a><span class="co">#&gt;     Log marginal likelihood is -37.693758</span></span>
+<span id="cb9-25"><a href="#cb9-25" tabindex="-1"></a><span class="co">#&gt; </span></span></code></pre></div>
+<p>The log marginal likelihood for the altenative hypothesis was
+-37.693758 for lorad (compared to -37.7984 for bridgesampling).</p>
+</div>
+</div>
+<div id="literature-cited" class="section level1 unnumbered">
+<h1 class="unnumbered">Literature Cited</h1>
+<div id="refs" class="references csl-bib-body hanging-indent" entry-spacing="0">
+<div id="ref-gronau2020" class="csl-entry">
+Gronau, Quentin F., Henrik Singmann, and Eric-Jan Wagenmakers. 2020.
+<span>“<span class="nocase">bridgesampling</span>: An <span>R</span>
+Package for Estimating Normalizing Constants.”</span> <em>Journal of
+Statistical Software</em> 92 (10): 1–29. <a href="https://doi.org/10.18637/jss.v092.i10">https://doi.org/10.18637/jss.v092.i10</a>.
+</div>
+<div id="ref-mengwong1996" class="csl-entry">
+Meng, Xiao-Li, and Wing Hung Wong. 1996. <span>“Simulating Ratios of
+Normalizing Constants via a Simple Identity: A Theoretical
+Exploration.”</span> <em>Statistica Sinica</em> 6: 831–60.
+</div>
+<div id="ref-rstan2023" class="csl-entry">
+Stan Development Team. 2023. <span>“<span>RStan</span>: The
+<span>R</span> Interface to <span>Stan</span>.”</span> <a href="https://mc-stan.org/">https://mc-stan.org/</a>.
+</div>
+<div id="ref-wang2023" class="csl-entry">
+Wang, Yu-Bo, Analisa Milkey, Aolan Li, Ming-Hui Chen, Lynn Kuo, and Paul
+O. Lewis. 2023. <span>“LoRaD: Marginal Likelihood Estimation with Haste
+(but No Waste).”</span> <em>Systematic Biology</em> 72 (3): 639–48. <a href="https://doi.org/10.1093/sysbio/syad007">https://doi.org/10.1093/sysbio/syad007</a>.
+</div>
+</div>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

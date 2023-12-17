@@ -1,0 +1,175 @@
+---
+title: "lorad-gtrig-vignette"
+output: rmarkdown::html_vignette
+bibliography: GTRIG.bib
+vignette: >
+  %\VignetteIndexEntry{lorad-gtrig-vignette}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+In this vignette, we explain how to estimate the marginal likelihood using the LoRaD method [@wang2023] for a sample of parameters from a fixed tree topology and using the GTR+I+G model.
+
+# Data
+
+The data set green5.nex comprises the following rbcL sequences:
+
+| Green Plant Species | GenBank Accession Number |
+| :------------------ | :----------------------: |
+| _Chara connivens_   | L13476                   |
+| _Sphagnum palustre_ | L13485                   |
+| _Asplenium nidus_   | AF525270                 |
+| _Picea pungens_     | AF456382                 |
+| _Avena sativa_      | L15300                   |
+
+The alignment of these five DNA sequences is 1296 sites in length.
+
+# Model
+
+The program RevBayes (version 1.2.1) was used to obtain a sample from the Bayesian posterior distribution under a GTR+I+G model. This model has 6 parameters, 3 of which are multivariate, yielding a total model dimension of 18: 
+
+| Parameter                       | Dimension | Prior                    | Description                                                                              |
+| :------------------------------ | :-------: | :----------------------- | :--------------------------------------------------------------------------------------- |
+| alpha                           | 1         | InverseGamma(1, 0.1)     | Shape parameter of the among-site rate heterogeneity Gamma distribution                  |
+| pinvar                          | 1         | Beta(1, 1)               | Proportion of invariable sites                                                           |
+| tree length                     | 1         | Gamma(1, 0.1)            | Sum of all 2*n-3 = 7 edge lengths in the unrooted phylogenetic tree (n = 5 sequences)    |
+| edge length proportions         | 7         | Dirichlet(1,1,1,1,1,1,1) | Proportion of tree length accounted for by each edge length                              |
+| exchangeabilities               | 5         | Dirichlet(1,1,1,1,1,1)   | The relative rate for each type of transition (rAC, rAG, rAT, rCG, rCT, rGT)             |
+| nucleotide relative frequencies | 3         | Dirichlet(1,1,1,1)       | The stationary distribution of nucleotide states (piA, piC, piG, piT)                    |
+
+Note: Gamma and InverseGamma distributions above use the shape, rate parameterization.
+
+# Reading in Data
+
+First, load the lorad package.
+
+```{r}
+library(lorad)
+```
+
+Read in the file containing the posterior sample. Note that RevBayes saves several columns that are functions of parameters (i.e. edgelens, site_rates). These parameters will be given a column specification of "ignore".
+
+```{r}
+# Dimensions of gtrigsamples
+dim(gtrigsamples)
+
+# Column names of gtrigsamples
+colnames(gtrigsamples)
+```
+
+# Column Specification 
+
+Next, we must create a named vector to associate each column name in `params` with a column specification. Here are the possible column specifications:
+
+* **iteration**: The MCMC iteration
+* **posterior**: The values in this column are components of the posterior (log scale)
+* **positive**: The parameter has positive support $(0,\infty)$
+* **proportion**: The parameter has support $(0,1)$
+* **simplex**: The values in this column represent one component of a simplex (but not the final component)
+* **simplexfinal**: Used for the column that represents the final component of a simplex
+* **unconstrained**: The parameter has support $(-\infty,\infty)$
+* **ignore**: The column should be ignored
+
+All columns labeled **posterior** will be summed to create the log posterior kernel (sum of log likelihood and log joint prior). 
+
+Here are the column specifications appropriate for this example. Note that we ignore the Likelihood and Prior columns because RevBayes has already combined these into the Posterior column.
+
+| Specification                | Column       |
+| :--------------------------: | :----------: |
+|  Iteration	                  | iteration    |
+|  Posterior	                  | posterior    |	
+|  Likelihood		          | ignore       |
+|  Prior		                  | ignore       |
+|  alpha		                  | positive     |
+|  edge_length_proportions.1.  | simplex      |	
+|  edge_length_proportions.2.  | simplex      |
+|  edge_length_proportions.3.  | simplex      |
+|  edge_length_proportions.4.  | simplex      |
+|  edge_length_proportions.5.  | simplex      |
+|  edge_length_proportions.6.  | simplex      |
+|  edge_length_proportions.7.  | simplexfinal |
+|  edgelens.1.	              | ignore       |
+|  edgelens.2.	              | ignore       |	
+|  edgelens.3.		          | ignore       |
+|  edgelens.4.		          | ignore       |
+|  edgelens.5.		          | ignore       |
+|  edgelens.6.		          | ignore       |
+|  edgelens.7.		          | ignore       |
+|  er.1.		                  | simplex      |
+|  er.2.		                  | simplex      |
+|  er.3.		                  | simplex      |
+|  er.4.		                  | simplex      |
+|  er.5.		                  | simplex      |
+|  er.6.		                  | simplexfinal |
+|  pi.1.		                  | simplex      |
+|  pi.2.		                  | simplex      |
+|  pi.3.		                  | simplex      |
+|  pi.4.		                  | simplexfinal |
+|  pinvar		              | proportion   |
+|  site_rates.1. 	          | ignore       |
+|  site_rates.2. 	          | ignore       |
+|  site_rates.3. 	          | ignore       |
+|  site_rates.4. 	          | ignore       |
+|  tree_length		          | positive     |
+
+
+```{r}
+# Create a named vector holding the column specifications
+colspec <- c("Iteration"                  = "iteration", 
+             "Posterior"                  = "posterior", 
+             "Likelihood"                 = "ignore", 
+             "Prior"                      = "ignore",
+             "alpha"		                  = "positive",          
+             "edge_length_proportions.1." = "simplex",	
+             "edge_length_proportions.2." = "simplex",	
+             "edge_length_proportions.3." = "simplex",	
+             "edge_length_proportions.4." = "simplex",	
+             "edge_length_proportions.5." = "simplex",	
+             "edge_length_proportions.6." = "simplex",	
+             "edge_length_proportions.7." = "simplexfinal",	
+             "edgelens.1."                = "ignore",               
+             "edgelens.2."                = "ignore",               
+             "edgelens.3."                = "ignore",	              
+             "edgelens.4."                = "ignore",	              
+             "edgelens.5."                = "ignore",	              
+             "edgelens.6."                = "ignore",             
+             "edgelens.7."                = "ignore",	              
+             "er.1."                      = "simplex",                    
+             "er.2."                      = "simplex",	                    
+             "er.3."                      = "simplex",                    
+             "er.4."                      = "simplex",	                    
+             "er.5."                      = "simplex",                    
+             "er.6."                      = "simplexfinal",	                    
+             "pi.1."                      = "simplex",                    
+             "pi.2."                      = "simplex",	                    
+             "pi.3."                      = "simplex",                    
+             "pi.4."                      = "simplexfinal",	                    
+             "pinvar"                     = "proportion",
+             "site_rates.1."              = "ignore",
+             "site_rates.2."              = "ignore",
+             "site_rates.3."              = "ignore",
+             "site_rates.4."              = "ignore",
+             "tree_length"                = "positive")
+```
+
+# Computing an Estimate of the Marginal Likelihood
+
+To run the LoRaD function we need to specify the **training fraction**, the **training sample selection method**, and the **coverage fraction**. The training fraction and the coverage fraction must be between 0 and 1. The training sample selection method can be _left_ (the first part of the sample), _right_ (the second part of the sample), or _random_ (a random part of the sample).
+
+For this example we used 0.5 for the training fraction, 0.1 for the coverage fraction, and "left" for the training sample selection method.
+
+```{r}
+results <- lorad_estimate(gtrigsamples, colspec, 0.5, "left", 0.1)
+lorad_summary(results)
+```
+
+The log marginal likelihood is -4440.521454. 
+
+## Literature Cited
